@@ -1,65 +1,77 @@
-// ============================================================
-// 학교 맵 레지스트리 (확장 가능한 설계)
-// 새 학교를 추가할 때 이 파일에 한 항목만 추가하면 됩니다.
-// ============================================================
+import type { School } from '@mafia-university/shared';
+
+export type SchoolLayoutKey = 'sangmyung' | 'sejong' | 'korea' | 'yonsei';
+
 export interface SchoolMapConfig {
-  /** Phaser 씬 키 */
-  key: string;
-  /** Phaser 에셋 키 (타일맵 JSON) */
+  key: SchoolLayoutKey;
   tilemapKey: string;
-  /** 프로토타입 단계에서 사용할 배경 색조 (0xRRGGBB) */
+  tilesetKey: string;
+  tilesetName: string;
   tint: number;
-  /** 학교 이름 */
-  displayName: string;
-  /** 테마 컬러 (HEX) */
+  displayName: School;
   themeColor: string;
+  worldWidth: number;
+  worldHeight: number;
+  spawn: { x: number; y: number };
 }
 
-/**
- * 학교 맵 레지스트리
- * ---
- * 새 학교 추가 방법:
- *   1. 이 객체에 항목 추가
- *   2. PreloadScene에서 타일맵 에셋 로딩 추가 (tilemapKey 기준)
- *   3. 실제 에셋 파일을 public/maps/{tilemapKey}.json에 추가
- *
- * 현재는 프로토타입 단계이므로 공용 맵에 tint만 다르게 적용합니다.
- */
-export const SCHOOL_MAP_REGISTRY: Record<string, SchoolMapConfig> = {
-  '상명대학교': {
+export const SCHOOL_MAP_REGISTRY: Record<School, SchoolMapConfig> = {
+  상명대학교: {
     key: 'sangmyung',
-    tilemapKey: 'map_prototype',  // 나중에 'map_sangmyung'으로 교체
+    tilemapKey: 'map_sangmyung',
+    tilesetKey: 'tiles_sangmyung',
+    tilesetName: 'tiles',
     tint: 0x4a90d9,
     displayName: '상명대학교',
     themeColor: '#4a90d9',
+    worldWidth: 1960,
+    worldHeight: 1320,
+    spawn: { x: 220, y: 1080 },
   },
-  '세종대학교': {
+  세종대학교: {
     key: 'sejong',
-    tilemapKey: 'map_prototype',
+    tilemapKey: 'map_sejong',
+    tilesetKey: 'tiles_sejong',
+    tilesetName: 'tiles',
     tint: 0x27ae60,
     displayName: '세종대학교',
     themeColor: '#27ae60',
+    worldWidth: 2080,
+    worldHeight: 1320,
+    spawn: { x: 260, y: 1040 },
   },
-  '고려대학교': {
+  고려대학교: {
     key: 'korea',
-    tilemapKey: 'map_prototype',
+    tilemapKey: 'map_korea',
+    tilesetKey: 'tiles_korea',
+    tilesetName: 'tiles',
     tint: 0xc0392b,
     displayName: '고려대학교',
     themeColor: '#c0392b',
+    worldWidth: 2200,
+    worldHeight: 1360,
+    spawn: { x: 260, y: 1140 },
   },
-  '연세대학교': {
+  연세대학교: {
     key: 'yonsei',
-    tilemapKey: 'map_prototype',
+    tilemapKey: 'map_yonsei',
+    tilesetKey: 'tiles_yonsei',
+    tilesetName: 'tiles',
     tint: 0x2980b9,
     displayName: '연세대학교',
     themeColor: '#2980b9',
+    worldWidth: 2160,
+    worldHeight: 1360,
+    spawn: { x: 300, y: 1120 },
   },
-  // ── 새 학교 추가 예시 ──────────────────────────────────────
-  // '한양대학교': {
-  //   key: 'hanyang',
-  //   tilemapKey: 'map_prototype',  // 실제 맵: 'map_hanyang'
-  //   tint: 0xe67e22,
-  //   displayName: '한양대학교',
-  //   themeColor: '#e67e22',
-  // },
 };
+
+const DEFAULT_SCHOOL: School = '상명대학교';
+
+export function getSchoolMapConfig(school: School | null | undefined): SchoolMapConfig {
+  if (!school) {
+    return SCHOOL_MAP_REGISTRY[DEFAULT_SCHOOL];
+  }
+
+  return SCHOOL_MAP_REGISTRY[school] ?? SCHOOL_MAP_REGISTRY[DEFAULT_SCHOOL];
+}
