@@ -2,7 +2,14 @@
 // Zustand 전역 상태 스토어
 // ============================================================
 import { create } from 'zustand';
-import type { ChatMessage, PlayerState, RoomInfo, Role, School } from '@mafia-university/shared';
+import type {
+  ChatMessage,
+  PlayerState,
+  RoomInfo,
+  Role,
+  School,
+  VoteProgressInfo,
+} from '@mafia-university/shared';
 
 interface GameStore {
   myId: string | null;
@@ -19,6 +26,9 @@ interface GameStore {
 
   isMeeting: boolean;
   meetingCallerId: string | null;
+  voteDeadlineAt: number | null;
+  votedPlayerIds: string[];
+  totalEligibleVoters: number;
 
   setMyId: (id: string) => void;
   setProfile: (nickname: string, school: School) => void;
@@ -27,6 +37,8 @@ interface GameStore {
   setCurrentRoom: (room: RoomInfo | null) => void;
   setMyRole: (role: Role) => void;
   setMeetingInfo: (isMeeting: boolean, callerId?: string | null) => void;
+  setVoteProgress: (progress: VoteProgressInfo) => void;
+  resetVoteProgress: () => void;
   addChat: (msg: ChatMessage) => void;
   updateRemotePlayer: (state: Partial<PlayerState> & { id: string }) => void;
   removeRemotePlayer: (id: string) => void;
@@ -41,6 +53,9 @@ export const useGameStore = create<GameStore>((set) => ({
   myRole: null,
   isMeeting: false,
   meetingCallerId: null,
+  voteDeadlineAt: null,
+  votedPlayerIds: [],
+  totalEligibleVoters: 0,
   screen: 'home',
   roomList: [],
   currentRoom: null,
@@ -56,6 +71,10 @@ export const useGameStore = create<GameStore>((set) => ({
   setCurrentRoom: (room) => set({ currentRoom: room }),
   setMyRole: (role) => set({ myRole: role }),
   setMeetingInfo: (isMeeting, callerId = null) => set({ isMeeting, meetingCallerId: callerId }),
+  setVoteProgress: ({ votedPlayerIds, totalEligibleVoters, deadlineAt }) =>
+    set({ votedPlayerIds, totalEligibleVoters, voteDeadlineAt: deadlineAt }),
+  resetVoteProgress: () =>
+    set({ voteDeadlineAt: null, votedPlayerIds: [], totalEligibleVoters: 0 }),
 
   addChat: (msg) =>
     set((state) => {
@@ -88,6 +107,9 @@ export const useGameStore = create<GameStore>((set) => ({
       myRole: null,
       isMeeting: false,
       meetingCallerId: null,
+      voteDeadlineAt: null,
+      votedPlayerIds: [],
+      totalEligibleVoters: 0,
       voteChats: [],
     }),
 }));

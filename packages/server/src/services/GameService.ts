@@ -1,19 +1,21 @@
 // ============================================================
 // GameService (SRP: 마피아 게임 로직만 책임)
 // ============================================================
-import { Role } from '@mafia-university/shared';
+import {
+  Role,
+  Winner,
+  isKillRole,
+  isProfessorFaction,
+} from '@mafia-university/shared';
 import { Room } from '../domain/Room';
-import { Player } from '../domain/Player';
 
 export class GameService {
   // ── 게임 시작 ────────────────────────────────────────────────
 
   /**
    * 역할을 랜덤 배분합니다.
-   * 배분 기준: 총 인원에 따라 마피아 수 결정
-   *   2~4명 → 마피아 1명
-   *   5~7명 → 마피아 2명, 의사 1명
-   *   8~10명 → 마피아 2명, 탐정 1명, 의사 1명
+   * 배분 기준: 총 인원에 따라 교수진 수를 조절하고
+   * 나머지는 학생 진영 역할 사이클로 채웁니다.
    */
   assignRoles(room: Room): Map<string, Role> {
     const players = Array.from(room.players.values());
@@ -26,7 +28,7 @@ export class GameService {
 
     const assignments = new Map<string, Role>();
     players.forEach((player, i) => {
-      const role = roles[i] ?? 'citizen';
+      const role = roles[i] ?? 'president';
       player.assignRole(role);
       assignments.set(player.id, role);
     });
@@ -38,15 +40,16 @@ export class GameService {
   // ── 킬 처리 ──────────────────────────────────────────────────
 
   /**
-   * 마피아가 대상을 킬합니다.
+   * 킬 가능한 역할(현재 교수/레거시 마피아)이 대상을 킬합니다.
    * 킬 성공 여부를 반환합니다.
    */
   processKill(room: Room, killerId: string, targetId: string): boolean {
     const killer = room.players.get(killerId);
     const target = room.players.get(targetId);
     if (!killer || !target) return false;
-    if (killer.role !== 'mafia') return false;
+    if (!isKillRole(killer.role)) return false;
     if (!target.isAlive) return false;
+    if (isProfessorFaction(target.role)) return false;
 
     target.kill();
     return true;
@@ -78,27 +81,45 @@ export class GameService {
   /**
    * 게임 종료 여부를 확인합니다.
    * 반환값: 'mafia' | 'citizen' | null (게임 계속)
+   * 현재 winner 문자열은 클라이언트 EndScene 호환을 위해 유지합니다.
    */
-  checkWinCondition(room: Room): 'mafia' | 'citizen' | null {
+  checkWinCondition(room: Room): Winner | null {
     const alivePlayers = Array.from(room.players.values()).filter(p => p.isAlive);
-    const aliveMafia  = alivePlayers.filter(p => p.role === 'mafia');
-    const aliveCitizen = alivePlayers.filter(p => p.role !== 'mafia');
+    const aliveProfessor = alivePlayers.filter(p => isProfessorFaction(p.role));
+    const aliveNonProfessor = alivePlayers.filter(p => !isProfessorFaction(p.role));
 
-    if (aliveMafia.length === 0) return 'citizen'; // 마피아 전원 사망 → 시민 승
-    if (aliveMafia.length >= aliveCitizen.length) return 'mafia'; // 마피아 ≥ 시민 → 마피아 승
+    if (aliveProfessor.length === 0) return 'citizen';
+    if (aliveProfessor.length >= aliveNonProfessor.length) return 'mafia';
     return null;
   }
 
   // ── 내부 유틸 ────────────────────────────────────────────────
 
   private buildRolePool(count: number): Role[] {
-    if (count <= 4) {
-      return ['mafia', ...Array(count - 1).fill('citizen') as Role[]];
-    } else if (count <= 7) {
-      return ['mafia', 'mafia', 'doctor', ...Array(count - 3).fill('citizen') as Role[]];
-    } else {
-      return ['mafia', 'mafia', 'detective', 'doctor', ...Array(count - 4).fill('citizen') as Role[]];
+    const professorRoles: Role[] =
+      count <= 4
+        ? ['professor']
+        : count <= 8
+          ? ['professor', 'grad_student']
+          : ['professor', 'impersonator'];
+
+    const studentRoleCycle: Role[] = [
+      'president',
+      'investigator',
+      'freshman',
+      'topstudent',
+      'jobseeker',
+    ];
+
+    const rolePool: Role[] = [...professorRoles];
+
+    let studentRoleIndex = 0;
+    while (rolePool.length < count) {
+      rolePool.push(studentRoleCycle[studentRoleIndex % studentRoleCycle.length]);
+      studentRoleIndex += 1;
     }
+
+    return rolePool;
   }
 
   private shuffle<T>(arr: T[]): void {

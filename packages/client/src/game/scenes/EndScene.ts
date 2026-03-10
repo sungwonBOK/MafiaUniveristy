@@ -5,16 +5,16 @@ import Phaser from 'phaser';
 import { useGameStore } from '../../store/useGameStore';
 import { socketService } from '../../services/SocketService';
 import { EVENTS } from '@mafia-university/shared';
-import type { RoomInfo } from '@mafia-university/shared';
+import type { RoomInfo, Winner } from '@mafia-university/shared';
 
 export class EndScene extends Phaser.Scene {
-  private winner!: 'mafia' | 'citizen';
+  private winner!: Winner;
 
   constructor() {
     super({ key: 'EndScene' });
   }
 
-  init(data: { winner: 'mafia' | 'citizen' }): void {
+  init(data: { winner: Winner }): void {
     this.winner = data.winner;
   }
 

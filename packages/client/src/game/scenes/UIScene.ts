@@ -5,7 +5,7 @@
 import Phaser from 'phaser';
 import { useGameStore } from '../../store/useGameStore';
 import { socketService } from '../../services/SocketService';
-import { EVENTS } from '@mafia-university/shared';
+import { EVENTS, ROLE_META } from '@mafia-university/shared';
 
 export class UIScene extends Phaser.Scene {
   private roleText!: Phaser.GameObjects.Text;
@@ -96,12 +96,9 @@ export class UIScene extends Phaser.Scene {
 
   private getRoleFormattedText(): string {
     const role = useGameStore.getState().myRole;
-    switch (role) {
-      case 'mafia': return '당신은 🔪 마피아입니다';
-      case 'doctor': return '당신은 💉 의사입니다';
-      case 'detective': return '당신은 🔍 탐정입니다';
-      case 'citizen': return '당신은 🧑‍🎓 시민입니다';
-      default: return '역할 확인 중...';
-    }
+    if (!role) return '역할 확인 중...';
+
+    const roleMeta = ROLE_META[role];
+    return `당신은 ${roleMeta.icon} ${roleMeta.label}입니다`;
   }
 }

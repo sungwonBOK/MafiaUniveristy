@@ -14,7 +14,61 @@ export const SCHOOLS = [
 export type School = (typeof SCHOOLS)[number];
 
 // ── 역할 ────────────────────────────────────────────────────
-export type Role = 'citizen' | 'mafia' | 'doctor' | 'detective';
+export type LegacyRole = 'citizen' | 'mafia' | 'doctor' | 'detective';
+export type CoreRole =
+  | 'president'
+  | 'investigator'
+  | 'freshman'
+  | 'jobseeker'
+  | 'topstudent'
+  | 'professor'
+  | 'grad_student'
+  | 'impersonator'
+  | 'couple'
+  | 'loner';
+export type Role = CoreRole | LegacyRole;
+
+export type Faction = 'student' | 'professor' | 'neutral';
+export type Winner = 'mafia' | 'citizen';
+
+export interface RoleMeta {
+  faction: Faction;
+  label: string;
+  icon: string;
+}
+
+export const ROLE_META: Record<Role, RoleMeta> = {
+  // Legacy roles
+  citizen: { faction: 'student', label: '시민', icon: '🧑‍🎓' },
+  mafia: { faction: 'professor', label: '마피아', icon: '🔪' },
+  doctor: { faction: 'student', label: '의사', icon: '💉' },
+  detective: { faction: 'student', label: '탐정', icon: '🔍' },
+
+  // Core roles
+  president: { faction: 'student', label: '학생회장', icon: '📣' },
+  investigator: { faction: 'student', label: '홍보국장', icon: '🔎' },
+  freshman: { faction: 'student', label: '새내기', icon: '🛡️' },
+  jobseeker: { faction: 'student', label: '취준생', icon: '🗂️' },
+  topstudent: { faction: 'student', label: '과탑', icon: '🧠' },
+  professor: { faction: 'professor', label: '교수', icon: '📋' },
+  grad_student: { faction: 'professor', label: '대학원생', icon: '🧪' },
+  impersonator: { faction: 'professor', label: '출석 대리인', icon: '🎭' },
+  couple: { faction: 'neutral', label: 'CC', icon: '💞' },
+  loner: { faction: 'neutral', label: '아싸', icon: '🧍' },
+};
+
+export function getRoleFaction(role: Role | null): Faction | null {
+  if (!role) return null;
+  return ROLE_META[role].faction;
+}
+
+export function isProfessorFaction(role: Role | null): boolean {
+  return getRoleFaction(role) === 'professor';
+}
+
+export function isKillRole(role: Role | null): boolean {
+  return role === 'professor' || role === 'mafia';
+}
 
 // ── 게임 단계 ────────────────────────────────────────────────
 export type GamePhase = 'waiting' | 'playing' | 'meeting' | 'vote' | 'ended';
@@ -23,6 +77,8 @@ export type GamePhase = 'waiting' | 'playing' | 'meeting' | 'vote' | 'ended';
 export interface PlayerState {
   id: string;       // Socket ID
   nickname: string;
+  displayNickname: string;
+  displayColor: string;
   school: School;
   x: number;
   y: number;
@@ -58,6 +114,12 @@ export interface VoteData {
   targetId: string | null; // null은 기권
 }
 
+export interface VoteProgressInfo {
+  votedPlayerIds: string[];
+  totalEligibleVoters: number;
+  deadlineAt: number;
+}
+
 // ============================================================
 // Socket 이벤트 이름 (오타 방지를 위해 상수로 관리)
 // ============================================================
@@ -82,15 +144,18 @@ export const EVENTS = {
   // 게임 중 이동
   PLAYER_MOVE:     'player_move',      // 클라→서버: 내 위치 전송
   PLAYER_STATE:    'player_state',     // 서버→클라: 전체 플레이어 상태 스냅샷
+  PLAYER_LEFT:     'player_left',      // 서버→클라: 플레이어 이탈
 
   // 능력 사용 (Space키)
   USE_ABILITY:     'use_ability',      // 클라→서버: 능력 사용
   ABILITY_RESULT:  'ability_result',   // 서버→클라: 능력 결과
+  INVESTIGATE_BODY:'investigate_body', // 클라→서버: 시체 분석 요청
 
   // 회의/투표
   CALL_MEETING:    'call_meeting',     // 클라→서버: 긴급 회의 소집
   MEETING_STARTED: 'meeting_started',  // 서버→클라: 회의 시작
   SUBMIT_VOTE:     'submit_vote',      // 클라→서버: 투표
+  VOTE_PROGRESS:   'vote_progress',    // 서버→클라: 현재 투표 진행 상태
   VOTE_RESULT:     'vote_result',      // 서버→클라: 투표 결과 + 추방 대상
 
   // 채팅

@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { Socket } from 'socket.io-client';
 import { EVENTS } from '@mafia-university/shared';
-import type { PlayerState, RoomInfo } from '@mafia-university/shared';
+import type { PlayerState, RoomInfo, VoteProgressInfo, Winner } from '@mafia-university/shared';
 import { PlayerEntity } from '../entities/PlayerEntity';
 import { InputManager } from '../managers/InputManager';
 import { NetworkManager } from '../managers/NetworkManager';
@@ -128,7 +128,9 @@ export class GameScene extends Phaser.Scene {
   private spawnRemotePlayer(state: PlayerState): void {
     const spawnX = state.x || this.activeMapConfig.spawn.x + 80;
     const spawnY = state.y || this.activeMapConfig.spawn.y;
-    const entity = new PlayerEntity(this, spawnX, spawnY, state.id, state.nickname, 0xf43f5e);
+    const displayName = state.displayNickname || state.nickname;
+    const displayColor = this.parseDisplayColor(state.displayColor, 0xf43f5e);
+    const entity = new PlayerEntity(this, spawnX, spawnY, state.id, displayName, displayColor);
 
     this.remotePlayers.set(state.id, entity);
     this.networkManager.addRemotePlayer(entity);
@@ -140,6 +142,17 @@ export class GameScene extends Phaser.Scene {
     if (this.mapColliders) {
       this.physics.add.collider(entity, this.mapColliders);
     }
+  }
+
+  private parseDisplayColor(colorValue: string | undefined, fallback: number): number {
+    if (!colorValue) return fallback;
+
+    const normalized = colorValue.startsWith('#') ? colorValue.slice(1) : colorValue;
+    if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+      return fallback;
+    }
+
+    return Number.parseInt(normalized, 16);
   }
 
   private setupCamera(): void {
@@ -160,12 +173,27 @@ export class GameScene extends Phaser.Scene {
       }
     });
 
-    this.socket.on(EVENTS.MEETING_STARTED, (data: { callerId: string }) => {
-      useGameStore.getState().setMeetingInfo(true, data.callerId);
+    this.socket.on(
+      EVENTS.MEETING_STARTED,
+      (data: { callerId: string; roomInfo: RoomInfo } & VoteProgressInfo) => {
+        useGameStore.getState().setCurrentRoom(data.roomInfo);
+        useGameStore.getState().setMeetingInfo(true, data.callerId);
+        useGameStore.getState().setVoteProgress({
+          votedPlayerIds: data.votedPlayerIds,
+          totalEligibleVoters: data.totalEligibleVoters,
+          deadlineAt: data.deadlineAt,
+        });
+      },
+    );
+
+    this.socket.on(EVENTS.VOTE_PROGRESS, (data: VoteProgressInfo) => {
+      useGameStore.getState().setVoteProgress(data);
     });
 
     this.socket.on(EVENTS.VOTE_RESULT, (data: { ejectedId: string | null; roomInfo: RoomInfo }) => {
+      useGameStore.getState().setCurrentRoom(data.roomInfo);
       useGameStore.getState().setMeetingInfo(false);
+      useGameStore.getState().resetVoteProgress();
 
       if (data.ejectedId) {
         if (data.ejectedId === this.myId) {
@@ -178,7 +206,9 @@ export class GameScene extends Phaser.Scene {
       }
     });
 
-    this.socket.on(EVENTS.GAME_ENDED, (data: { winner: string }) => {
+    this.socket.on(EVENTS.GAME_ENDED, (data: { winner: Winner }) => {
+      useGameStore.getState().setMeetingInfo(false);
+      useGameStore.getState().resetVoteProgress();
       this.shutdown();
       this.scene.start('EndScene', { winner: data.winner });
     });
@@ -231,6 +261,7 @@ export class GameScene extends Phaser.Scene {
     this.networkManager?.destroy();
     this.socket.off(EVENTS.ABILITY_RESULT);
     this.socket.off(EVENTS.MEETING_STARTED);
+    this.socket.off(EVENTS.VOTE_PROGRESS);
     this.socket.off(EVENTS.VOTE_RESULT);
     this.socket.off(EVENTS.GAME_ENDED);
   }

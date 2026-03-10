@@ -22,6 +22,18 @@ interface AbilityPayload {
   targetId: string;
 }
 
+const VOTE_DURATION_MS = 60_000;
+
+type VoteTimeout = ReturnType<typeof setTimeout>;
+
+interface RoomVoteState {
+  votes: Map<string, string | null>;
+  deadlineAt: number;
+  timeoutId: VoteTimeout;
+}
+
+const roomVoteStates = new Map<string, RoomVoteState>();
+
 export function registerGameHandlers(
   io: Server,
   socket: Socket,
@@ -31,6 +43,55 @@ export function registerGameHandlers(
   chatService: ChatService,
   networkMetrics?: NetworkMetricsService,
 ): void {
+  const clearVoteState = (roomId: string) => {
+    const voteState = roomVoteStates.get(roomId);
+    if (!voteState) return;
+
+    clearTimeout(voteState.timeoutId);
+    roomVoteStates.delete(roomId);
+  };
+
+  const emitVoteProgress = (roomId: string) => {
+    const room = roomService.getRoom(roomId);
+    const voteState = roomVoteStates.get(roomId);
+    if (!room || !voteState) return;
+
+    const totalEligibleVoters = Array.from(room.players.values()).filter((candidate) => candidate.isAlive).length;
+
+    io.to(roomId).emit(EVENTS.VOTE_PROGRESS, {
+      votedPlayerIds: [...voteState.votes.keys()],
+      totalEligibleVoters,
+      deadlineAt: voteState.deadlineAt,
+    });
+  };
+
+  const finalizeVote = (roomId: string) => {
+    const room = roomService.getRoom(roomId);
+    const voteState = roomVoteStates.get(roomId);
+    if (!room || !voteState || room.phase !== 'meeting') return;
+
+    const ejectedId = gameService.processVotes(voteState.votes);
+
+    if (ejectedId) {
+      const ejected = room.getPlayer(ejectedId);
+      ejected?.kill();
+    }
+
+    clearVoteState(roomId);
+    room.phase = 'playing';
+
+    const winner = gameService.checkWinCondition(room);
+    if (winner) {
+      room.phase = 'ended';
+      io.to(roomId).emit(EVENTS.GAME_ENDED, { winner });
+      return;
+    }
+
+    io.to(roomId).emit(EVENTS.VOTE_RESULT, {
+      ejectedId,
+      roomInfo: room.toInfo(),
+    });
+  };
 
   // ── 준비 상태 토글 ───────────────────────────────────────────
   socket.on(EVENTS.SET_READY, (roomId: string) => {
@@ -91,22 +152,22 @@ export function registerGameHandlers(
     const p = room.getPlayer(player.id);
     if (!p || !p.isAlive) return;
 
-    if (p.role === 'mafia') {
-      const killed = gameService.processKill(room, player.id, payload.targetId);
-      if (killed) {
-        io.to(payload.roomId).emit(EVENTS.ABILITY_RESULT, {
-          type: 'kill',
-          targetId: payload.targetId,
-        });
+    const killed = gameService.processKill(room, player.id, payload.targetId);
+    if (killed) {
+      io.to(payload.roomId).emit(EVENTS.ABILITY_RESULT, {
+        type: 'kill',
+        targetId: payload.targetId,
+      });
 
-        const winner = gameService.checkWinCondition(room);
-        if (winner) {
-          room.phase = 'ended';
-          io.to(payload.roomId).emit(EVENTS.GAME_ENDED, { winner });
-        }
+      const winner = gameService.checkWinCondition(room);
+      if (winner) {
+        clearVoteState(payload.roomId);
+        room.phase = 'ended';
+        io.to(payload.roomId).emit(EVENTS.GAME_ENDED, { winner });
+        return;
       }
     }
-    // TODO: 탐정/의사 능력 추가 예정
+    // TODO: 역할별 액티브 스킬(조사/시체분석/변신 등) 추가 예정
   });
 
   // ── 긴급 회의 소집 ────────────────────────────────────────────
@@ -116,48 +177,54 @@ export function registerGameHandlers(
     const p = room.getPlayer(player.id);
     if (!p || !p.isAlive) return;
 
+    clearVoteState(roomId);
     room.phase = 'meeting';
-    io.to(roomId).emit(EVENTS.MEETING_STARTED, { callerId: player.id });
-  });
+    const deadlineAt = Date.now() + VOTE_DURATION_MS;
+    const timeoutId = setTimeout(() => {
+      finalizeVote(roomId);
+    }, VOTE_DURATION_MS);
 
-  // ── 투표 ─────────────────────────────────────────────────────
-  // 투표는 방 단위로 서버에서 집계
-  const voteMap = new Map<string, Map<string, string | null>>();
+    roomVoteStates.set(roomId, {
+      votes: new Map(),
+      deadlineAt,
+      timeoutId,
+    });
+
+    io.to(roomId).emit(EVENTS.MEETING_STARTED, {
+      callerId: player.id,
+      roomInfo: room.toInfo(),
+      votedPlayerIds: [],
+      totalEligibleVoters: Array.from(room.players.values()).filter((candidate) => candidate.isAlive).length,
+      deadlineAt,
+    });
+  });
 
   socket.on(EVENTS.SUBMIT_VOTE, ({ roomId, targetId }: { roomId: string; targetId: string | null }) => {
     const room = roomService.getRoom(roomId);
     if (!room || room.phase !== 'meeting') return;
+    const currentPlayer = room.getPlayer(player.id);
+    if (!currentPlayer || !currentPlayer.isAlive) return;
 
-    if (!voteMap.has(roomId)) voteMap.set(roomId, new Map());
-    voteMap.get(roomId)!.set(player.id, targetId);
+    const voteState = roomVoteStates.get(roomId);
+    if (!voteState) return;
+    if (voteState.votes.has(player.id)) return;
 
-    const aliveCount = Array.from(room.players.values()).filter(p => p.isAlive).length;
-    const votes = voteMap.get(roomId)!;
+    if (targetId !== null) {
+      const targetPlayer = room.getPlayer(targetId);
+      if (!targetPlayer || !targetPlayer.isAlive) return;
+    }
+
+    voteState.votes.set(player.id, targetId);
+    emitVoteProgress(roomId);
+
+    const aliveCount = Array.from(room.players.values()).filter((candidate) => candidate.isAlive).length;
 
     // 모든 살아있는 플레이어가 투표 완료했을 때 집계
-    if (votes.size >= aliveCount) {
-      const ejectedId = gameService.processVotes(votes);
-
-      if (ejectedId) {
-        const ejected = room.getPlayer(ejectedId);
-        ejected?.kill();
-      }
-
-      voteMap.delete(roomId);
-      room.phase = 'playing';
-
-      const winner = gameService.checkWinCondition(room);
-      if (winner) {
-        room.phase = 'ended';
-        io.to(roomId).emit(EVENTS.GAME_ENDED, { winner });
-      } else {
-        io.to(roomId).emit(EVENTS.VOTE_RESULT, {
-          ejectedId,
-          roomInfo: room.toInfo(),
-        });
-      }
+    if (voteState.votes.size >= aliveCount) {
+      finalizeVote(roomId);
     }
   });
+
   // ── 게임 재시작 (방장만 가능) ─────────────────────────────────
   // 게임 종료(ended) 상태에서 방장이 대기방으로 복귀를 요청합니다.
   // 모든 플레이어의 상태(역할, 생존, 준비)를 초기화하고 phase를 'waiting'으로 되돌립니다.
@@ -173,6 +240,8 @@ export function registerGameHandlers(
 
     // 방이 ended 상태일 때만 리셋 허용 (이중 실행 방지)
     if (room.phase !== 'ended') return;
+
+    clearVoteState(roomId);
 
     // 모든 플레이어 상태 초기화
     for (const p of room.players.values()) {
