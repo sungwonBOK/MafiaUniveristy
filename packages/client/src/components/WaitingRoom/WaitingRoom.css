@@ -1,0 +1,167 @@
+/* ============================================================
+ * 대기방 화면 스타일
+ * ============================================================ */
+
+.waiting {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+}
+
+.waiting__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--c-border);
+  background: rgba(10,10,20,0.85);
+  backdrop-filter: blur(12px);
+}
+
+.waiting__room-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.waiting__room-id {
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+  margin-top: 2px;
+}
+
+.waiting__body {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  overflow: hidden;
+}
+
+/* 플레이어 목록 */
+.waiting__players {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.waiting__players-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--c-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.waiting__player-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.player-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+  position: relative;
+}
+
+.player-slot--ready {
+  border-color: rgba(34,197,94,0.4);
+  background: rgba(34,197,94,0.05);
+}
+
+.player-slot--host::before {
+  content: '👑';
+  position: absolute;
+  top: -10px;
+  font-size: 1rem;
+}
+
+.player-slot__avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.player-slot__name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-slot__status {
+  font-size: 0.7rem;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-weight: 600;
+}
+
+.player-slot__status--ready {
+  background: rgba(34,197,94,0.15);
+  color: var(--c-success);
+}
+
+.player-slot__status--waiting {
+  background: rgba(255,255,255,0.06);
+  color: var(--c-text-muted);
+}
+
+/* 빈 슬롯 */
+.player-slot--empty {
+  border-style: dashed;
+  opacity: 0.35;
+}
+
+/* 하단 액션 */
+.waiting__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  grid-column: 1;
+  border-top: 1px solid var(--c-border);
+}
+
+.waiting__ready-info {
+  flex: 1;
+  font-size: 0.82rem;
+  color: var(--c-text-muted);
+}
+
+/* 채팅 패널 */
+.waiting__chat-panel {
+  border-left: 1px solid var(--c-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.waiting__chat-header {
+  padding: 16px 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  border-bottom: 1px solid var(--c-border);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}

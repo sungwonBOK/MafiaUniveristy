@@ -1,0 +1,226 @@
+/* ============================================================
+ * 로비 화면 스타일
+ * ============================================================ */
+
+.lobby {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+}
+
+/* 상단 헤더 */
+.lobby__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--c-border);
+  background: rgba(10,10,20,0.85);
+  backdrop-filter: blur(12px);
+  z-index: 10;
+}
+
+.lobby__header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lobby__logo {
+  font-size: 1.5rem;
+}
+
+.lobby__title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6366f1, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lobby__school-badge {
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid currentColor;
+  opacity: 0.8;
+}
+
+.lobby__user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: var(--c-text-muted);
+}
+
+.lobby__avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* 본문 레이아웃 */
+.lobby__body {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* 방 목록 영역 */
+.lobby__rooms {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.lobby__rooms-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lobby__rooms-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+.lobby__rooms-count {
+  font-size: 0.78rem;
+  color: var(--c-text-muted);
+}
+
+.lobby__rooms-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+/* 방 카드 */
+.room-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  gap: 12px;
+}
+
+.room-card:hover {
+  background: rgba(99,102,241,0.08);
+  border-color: rgba(99,102,241,0.3);
+  transform: translateX(4px);
+}
+
+.room-card__info { flex: 1; min-width: 0; }
+
+.room-card__name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.room-card__meta {
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-card__status {
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.room-card__status--waiting {
+  background: rgba(34,197,94,0.15);
+  color: var(--c-success);
+}
+
+.room-card__status--playing {
+  background: rgba(244,63,94,0.15);
+  color: var(--c-accent);
+}
+
+.room-card__join-btn {
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+/* 빈 방 목록 */
+.lobby__empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--c-text-muted);
+}
+
+.lobby__empty-icon { font-size: 3rem; opacity: 0.3; }
+.lobby__empty-text { font-size: 0.9rem; }
+
+/* 방 생성 버튼 영역 */
+.lobby__create-area {
+  display: flex;
+  gap: 10px;
+}
+
+.lobby__create-input {
+  flex: 1;
+}
+
+/* 오른쪽 채팅 패널 */
+.lobby__chat-panel {
+  border-left: 1px solid var(--c-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.lobby__chat-header {
+  padding: 16px 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  border-bottom: 1px solid var(--c-border);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lobby__chat-body {
+  flex: 1;
+  overflow: hidden;
+}

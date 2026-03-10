@@ -1,0 +1,19 @@
+{
+  "name": "mafia-university",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/server",
+    "packages/client",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=packages/server\" \"npm run dev --workspace=packages/client\"",
+    "build": "npm run build --workspace=packages/client",
+    "server": "npm run dev --workspace=packages/server",
+    "client": "npm run dev --workspace=packages/client"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

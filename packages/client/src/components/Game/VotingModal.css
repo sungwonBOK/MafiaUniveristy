@@ -1,0 +1,157 @@
+.voting-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(10, 10, 20, 0.85); /* 블러 처리된 어두운 배경 */
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.voting-modal {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  border-radius: 12px;
+  width: 900px;
+  max-width: 95vw;
+  height: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.voting-modal__header {
+  padding: 1.5rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--c-border);
+  text-align: center;
+}
+
+.voting-modal__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 0.5rem 0;
+}
+
+.voting-modal__subtitle {
+  color: var(--c-text-muted);
+  font-size: 0.9rem;
+}
+
+.voting-modal__body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.voting-modal__players {
+  flex: 2;
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.voting-modal__chat {
+  flex: 1;
+  border-left: 1px solid var(--c-border);
+  background-color: rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.player-vote-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.player-vote-card:hover:not(.player-vote-card--dead) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.player-vote-card--selected {
+  border-color: var(--c-primary);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.player-vote-card--dead {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+.player-vote-card__info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.player-vote-card__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+.player-vote-card--dead .player-vote-card__avatar {
+  background: #333;
+}
+
+.player-vote-card__name {
+  font-weight: 600;
+  color: #fff;
+}
+
+.player-vote-card__status {
+  font-size: 0.8rem;
+  color: var(--c-error);
+}
+
+.voting-modal__footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--c-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.voting-modal__skip-btn {
+  background: transparent;
+  border: 1px solid var(--c-border);
+  color: var(--c-text);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.voting-modal__skip-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.voting-modal__submit-btn {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+}

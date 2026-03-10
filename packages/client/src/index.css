@@ -1,0 +1,220 @@
+/* ============================================================
+ * 전역 CSS — 디자인 시스템 & 리셋
+ * 구글 폰트: Noto Sans KR (한국어 최적)
+ * ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&family=Outfit:wght@400;600;700;900&display=swap');
+
+/* ── CSS 커스텀 프로퍼티 (디자인 토큰) ──────────────────────── */
+:root {
+  /* 컬러 팔레트 */
+  --c-bg:         #0a0a14;
+  --c-surface:    #12121f;
+  --c-surface-2:  #1a1a2e;
+  --c-border:     rgba(255, 255, 255, 0.07);
+  --c-primary:    #6366f1;  /* 인디고 */
+  --c-primary-h:  #818cf8;
+  --c-accent:     #f43f5e;  /* 마피아 레드 */
+  --c-success:    #22c55e;
+  --c-warning:    #f59e0b;
+  --c-text:       #e2e8ff;
+  --c-text-muted: rgba(226, 232, 255, 0.45);
+
+  /* 학교별 컬러 */
+  --c-sangmyung: #4a90d9;
+  --c-sejong:    #27ae60;
+  --c-korea:     #c0392b;
+  --c-yonsei:    #2980b9;
+
+  /* 그림자 */
+  --shadow-glow: 0 0 32px rgba(99, 102, 241, 0.18);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.45);
+
+  /* 반경 */
+  --radius-sm:  8px;
+  --radius-md:  14px;
+  --radius-lg:  22px;
+  --radius-xl:  32px;
+
+  /* 전환 */
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── 리셋 & 기본 ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Noto Sans KR', 'Outfit', sans-serif;
+  background-color: var(--c-bg);
+  color: var(--c-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── 공통 유틸리티 클래스 ──────────────────────────────────────── */
+
+/* 페이지 래퍼 */
+.page {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 배경 그라디언트 애니메이션 */
+.page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,102,241,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 80% at 80% 90%, rgba(244,63,94,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* 글래스 카드 */
+.card {
+  background: rgba(18, 18, 31, 0.7);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-card);
+}
+
+/* 기본 버튼 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.btn--primary {
+  background: var(--c-primary);
+  color: #fff;
+  box-shadow: 0 0 18px rgba(99,102,241,0.35);
+}
+.btn--primary:hover {
+  background: var(--c-primary-h);
+  transform: translateY(-1px);
+  box-shadow: 0 0 28px rgba(99,102,241,0.5);
+}
+
+.btn--danger {
+  background: var(--c-accent);
+  color: #fff;
+}
+.btn--danger:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.btn--ghost {
+  background: rgba(255,255,255,0.06);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+}
+.btn--ghost:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* 기본 인풋 */
+.input {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  color: var(--c-text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.input:focus {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
+
+.input::placeholder {
+  color: var(--c-text-muted);
+}
+
+/* 셀렉트 */
+.select {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  color: var(--c-text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236366f1' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  transition: border-color var(--transition);
+}
+
+.select:focus {
+  border-color: var(--c-primary);
+}
+
+.select option {
+  background: var(--c-surface-2);
+}
+
+/* 레이블 */
+.label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+/* 페이드인 애니메이션 */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+  animation: fadeInUp 0.45s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* 펄스 글로우 */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 16px rgba(99,102,241,0.3); }
+  50%       { box-shadow: 0 0 32px rgba(99,102,241,0.6); }
+}
